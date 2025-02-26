@@ -3,3 +3,4 @@ __pycache__/
 runs
 /postprocessing/
 /trained_models/
+wandb/

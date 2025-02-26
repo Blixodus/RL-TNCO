@@ -4,8 +4,8 @@ import os
 config = dict()
 
 network = dict(
-        n_nodes=400,
-        n_edges=800,
+        n_nodes=400, # >= num of nodes in the largest tensor network
+        n_edges=800, # >= num of edges in the largest tensor network
         mean_connectivity=3,
         tensor_dim=6,
         train_files=None,
@@ -14,15 +14,15 @@ network = dict(
         )
 
 model = {
-    'score_to_prob'            : 'probs',  # logits or probs or probs_unnormalized
+    'score_to_prob'            : 'probs',  # What ? (logits, probs, probs_unnormalized)
     'eps'                      : 10 ** -2,
-    'num_gnn_layers'           : 4,
-    'num_intermediate_features': 128,
-    'use_batch_norm'           : False,
-    'use_pair_norm'            : True,
-    'agg_type'                 : 'mean',
-    'use_bias'                 : False,
-    'pretrained_model'         : None,
+    'num_gnn_layers'           : 4,        # Number of GNN layers (paper tested 3, 4, 6)
+    'num_intermediate_features': 128,      #
+    'use_batch_norm'           : False,    #
+    'use_pair_norm'            : True,     # Using PairNorm (https://arxiv.org/abs/1909.12223)
+    'agg_type'                 : 'mean',   # Neighbourhood aggregation type (max, mean, sum)
+    'use_bias'                 : False,    #
+    'pretrained_model'         : 'wandb/run-20250225_155037-f3l4s4l1/files/epoch_32.model', # wandb/run-***/files/epoch_32.model
     }
 
 train_params = {
@@ -53,7 +53,7 @@ train_params = {
     'additional_rescaling_factor'             : 1,
     'train_epochs_per_rollout'                : 8,
     'suffix_solver'                           : None,  # 'greedy',
-    'max_prefix'                              : 5
+    'max_prefix'                              : 5 # Max length of prefix solved by prefix solver (greedy) ?
     }
 
 representation = {
@@ -108,7 +108,7 @@ baselines = dict(num_eqs=100,
                  split=None,
                  policy_eval_seed=-1)
 
-wandb = {"project": "RL-TNCO"}
+wandb = {"project_name": "RL-TNCO"}
 
 default_config = dict(
         learning=learning,
