@@ -16,7 +16,9 @@ def benchmark():
     if not isinstance(eqs, list):
         eqs = [eqs]
     operands = []
+    # For each equation defined in the pickle file equation list
     for eq in eqs:
+        # Create a list of empty tensors with the same shapes as the tensors used in this equation
         operands.append([np.empty(s) for s in eq[1]])
     tnco_solver = TNCOsolver(config)
     path = tnco_solver.find_path()
