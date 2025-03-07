@@ -50,8 +50,11 @@ class TNCOsolver(object):
         finish_time = time.time()
         best_result = self.callback.update_best_result()
         total_time = finish_time - start_time
-        val = best_result[0]["history_by_indices"]
-        print(f'Path finding took {total_time}')
-        print(f'Path {val}')
-        pickle.dump((total_time, val), open(filepath, "wb"))
+        try:
+            val = best_result[0]["history_by_indices"]
+            print(f'Path finding took {total_time}')
+            print(f'Path {val}')
+            pickle.dump((total_time, val), open(filepath, "wb"))
+        except KeyError as e:
+            print("Key error", e)
         return best_result
