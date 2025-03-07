@@ -92,7 +92,7 @@ def solve_eq(eq, shapes, baseline, max_time=300):
 
 
 if __name__ == '__main__':
-    config, eval_config = get_config()
+    config = get_config()
     create_logger(config)
     ngc_run = os.path.isdir('/ws')
     if ngc_run:

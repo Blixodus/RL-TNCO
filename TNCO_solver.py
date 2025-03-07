@@ -44,10 +44,14 @@ class TNCOsolver(object):
             load_torch_rng_state(stats['torch_rng_state'][0], gpu_rng_state=stats['torch_rng_state'][1],
                                  device=self.model.device)
 
-    def find_path(self):
+    def find_path(self, filepath):
         start_time = time.time()
         self.callback.evaluate_model()
         finish_time = time.time()
         best_result = self.callback.update_best_result()
-        print(f'Path finding took {finish_time - start_time}')
+        total_time = finish_time - start_time
+        val = best_result[0]["history_by_indices"]
+        print(f'Path finding took {total_time}')
+        print(f'Path {val}')
+        pickle.dump((total_time, val), open(filepath, "wb"))
         return best_result
