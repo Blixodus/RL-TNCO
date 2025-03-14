@@ -23,9 +23,10 @@ wandb offline
 The `datasets` directory contains the files that were used for model training and evaluation in the [tensor-train scalar product contraction ordering publication (link to come)](). Notably,
 - `train/scalar_product_2D_dataset_num_eqs_900_num_node_100_mean_conn_3.p` can be used to train on $x^Ty$-type scalar products,
 - `train/scalar_product_3D_dataset_num_eqs_450_num_node_100_mean_conn_3.p` can be used to train on $x^TAy$-type scalar products,
-- `eval/xy/` directory contains the $x^Ty$-type tensor trains used to evaluate the model,
-- `eval/xAy/` directory contains the $x^TAy$-type tensor trains used to evaluate the model,
-- `eval/real-tt/` directory contains the real-life tensor trains used to evaluate the model.
+- `eval/synthetic/xy/` directory contains the synthetic $x^Ty$-type tensor trains used to evaluate the model,
+- `eval/synthetic/xAy/` directory contains the synthetic $x^TAy$-type tensor trains used to evaluate the model,
+- `eval/real-tt/xy` directory contains the real-life $x^Ty$-type tensor trains used to evaluate the model,
+- `eval/real-tt/xAy` directory contains the real-life $x^TAy$-type tensor trains used to evaluate the model.
 
 The `models` directory contains pre-trained models for $x^Ty$ and $x^TAy$ types of tensor-train scalar products. To use them, modify the `config.py` file at line 27 to be as follows:
 ```
