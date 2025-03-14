@@ -12,8 +12,8 @@ from utils.main_utils import read_data_file
 
 def benchmark():
     config = presetup_experiment()
-    input_dir = "datasets/xy"
-    output_dir = "results/xy"
+    input_dir = sys.argv[1]
+    output_dir = sys.argv[2]
     for filepath in Path(input_dir).rglob('*'):
         if not filepath.is_file():
             continue
