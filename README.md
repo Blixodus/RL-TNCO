@@ -1,54 +1,57 @@
-# RL-TNCO
+# RL-TNCO (fork)
 
-RL-TNCO is a reinforcement learning algorithm for solving the tensor network (TN) contraction problem. The goal of this algorithm is to find a good contraction order.
+This is a fork of the [RL-TNCO](https://github.com/NVlabs/RL-TNCO) project; we recommend reading their `README.md` file in addition to this one. The purpose is to apply the reinforcement learning method for finding contraction orders in tensor networks onto tensor-train scalar products as a submodule of [the OptiTenseurs tensor-train scalar product contraction ordering project](https://github.com/Blixodus/OptiTenseurs). This repository is public mainly for data replication purposes; however, some of this information might be useful to users who wish to understand how to use RL-TNCO in general.
 
-You can read about it in more details in our [paper](https://proceedings.mlr.press/v162/meirom22a/meirom22a.pdf). To learn more about tensor network, consider reviewing [this](https://docs.nvidia.com/cuda/cuquantum/cutensornet/overview.html#introduction-to-tensor-networks). 
-For a gentle introduction on reinforcement learning, we recommended these [resources](https://stable-baselines3.readthedocs.io/en/master/guide/rl.html).
+## Conda environment
 
-## Prerequisites
+To use RL-TNCO, we recommend using the provided [conda](https://www.anaconda.com/) environment. The original RL-TNCO repository also contains a `Dockerfile`, which unfortunately does not work and has been removed from this fork. To create the conda environment, use the following commands:
+```
+# Pre-setup environment
+conda env create -n rl-tnco --file environment.yml
+# Install additional packages dependent on specific PyTorch and CUDA versions and not available by default (requires activation of the environment)
+conda activate rl-tnco
+pip install pyg-lib==0.1.0+pt113cu117 torch-cluster==1.6.0+pt113cu117 torch-scatter==2.1.0+pt113cu117 torch-sparse==0.6.16+pt113cu117 torch-spline-conv==1.2.1+pt113cu117 -f https://data.pyg.org/whl/torch-1.13.0%2Bcu117.html
+```
 
-An environment can be set using either Docker or Conda.
+The RL-TNCO project uses an [online tool](https://wandb.ai/); however, we recommend turning it off unless necessary to ensure the code runs well in all cases. For this, you can for example use the following command:
+```
+wandb offline
+```
 
-1. Docker: use the  `Dockerfile` in the repository.
-2. Conda: Create a conda environment, `conda env create -n rl-tnco --file environment.yml`
+## Provided files for tensor-train scalar product
 
-## Training
+The `datasets` directory contains the files that were used for model training and evaluation in the [tensor-train scalar product contraction ordering publication (link to come)](). Notably,
+- `train/scalar_product_2D_dataset_num_eqs_900_num_node_100_mean_conn_3.p` can be used to train on $x^Ty$-type scalar products,
+- `train/scalar_product_3D_dataset_num_eqs_450_num_node_100_mean_conn_3.p` can be used to train on $x^TAy$-type scalar products,
+- `eval/xy/` directory contains the $x^Ty$-type tensor trains used to evaluate the model,
+- `eval/xAy/` directory contains the $x^TAy$-type tensor trains used to evaluate the model,
+- `eval/real-tt/` directory contains the real-life tensor trains used to evaluate the model.
 
-The code is based on Stable-Baselines 3 framework.
+The `models` directory contains pre-trained models for $x^Ty$ and $x^TAy$ types of tensor-train scalar products. To use them, modify the `config.py` file at line 27 to be as follows:
+```
+'pretrained_model' : 'models/[type]/epoch_32.model'
+```
 
-Training is done by running `main.py`. Parameters can be adjusted by modifying `config.py`. RL-TNCO can be either trained on a predefined tensor network dataset or generate its own random tensor network dataset, based on [opt-einsum](https://optimized-einsum.readthedocs.io/en/stable/) tensor network generator. To train on a specific dataset, set the `train-files` parameter in the config file to the datafile, otherwise set it to `None`. Inference should be performed on a predefined test file.
+## Reproducing data from the paper
 
-## Inference
+You can run the `benchmarking.py` script after setting a model, as described in the previous section. Run the command below, setting input to one of the directories listed above and output to any directory where you want results to be written. After obtaining results, you can follow instructions from [OptiTenseurs](https://github.com/Blixodus/OptiTenseurs) to create plots.
+```
+python benchmarking.py [input] [output]
+```
 
-Set the pretrained model parameter in `config.py` to the pretrained model file. We support two methods for performing inference.
+**Important note: For some tensor trains, the RL-TNCO method might not return a result or only a partial result. The reason for this is currently unknown to us.**
 
-1. Use TNCOsolver directly (recommended): See `benchmarking.py` for an example.
-2. Using the training pipeline: Reduce the number of training epochs to 0 (`epochs` parameter in `config.py`) and run `main.py`.
+## Training the model
 
+If you wish to train a model, run the `main.py` script. Simply modify the config.py file as required:
+```
+# Make these values match reality (note: xy type network has 2 x length nodes and 3 x length edges, xAy type network has 3 x length nodes and 5 x length edges)
+n_nodes = [number of nodes of the largest network]
+n_edges = [number of edges of the largest network]
+# Point to training files to avoid scripts creating random training files
+train_files = 'datasets/scalar_product_[type].p'
+# No pre-trained model for training
+'pretrained_model' : None
+```
 
-## File format
-
-Train (and test file) are pickle files. Each file contains three fields: 
-
-1. Eqs: List of $n$ equations. Each equation is a tuple of length 3, and follows the output of opt-einsum's `helpers.rand_equation()` function. The first element is an equation string in [opt-einsum notation](https://optimized-einsum.readthedocs.io/en/stable/input_format.html) (e.g., "ijk,jkl-\>li"). The second element is a `shape` variable, specifying the dimension for each tensor (e.g., [(2,2,3),(2,3,4)]). The last entry is `size_dict`, specifying the extent of each index.
-
-2. `baseline_solutions` (optional, recommended): A dictionary where each key is the baseline label (e.g., oe-greedy). Each value is a list of $n$ tuples representing the output paths found by the baseline. The tuples entries are: contraction cost, path finding compute time, [PathInfo](https://optimized-einsum.readthedocs.io/en/stable/autosummary/opt_einsum.contract.PathInfo.html), path as a list of contracted pairs.
-This variable is mandatory for path pruning (see paper) during training. We recommended providing this baseline even with a weak baseline. It is not required for inference.
-4. `info` (optimal): additional information
-
-## Practical Guidelines
-
-First, set the following parameters according to the instruction in the table.
-
-| **Parameter** | **Interpretation** |
-| --- | --- |
-| n\_nodes | This should be equal or higher than the number of nodes in the largest TN. If no datafile is provided, this parameter set the number of nodes in the random TNs generated during training. |
-| n\_edges | This should be equal or higher than the number of edges in the largest TN. |
-| external\_reward\_normalization | A scaling factor. Should be set to the order of magnitude of the cost (#flops). It can be estimated using a fast (and suboptimal) solver. |
-| batch\_size | Set it to as high as possible with getting OutOfMemory errors. This value will depend on the TN size. |
-
-Obtaining optimal results may require some tuning. Try and adjust the parameters `value_weight`, `greedy_weight`, and `external_reward_normalization`. It is recommended to use multiple seeds. Feel free to contact us for advice and further tuning instructions depending on your use case.
-
-## Contact us
-
-[Contract us](mailto:emeirom@nvidia.com) for specific pretrained models and questions.
+You can use one of the previously mentioned training files or generate your own with tools from [OptiTenseurs](https://github.com/Blixodus/OptiTenseurs).
