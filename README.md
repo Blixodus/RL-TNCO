@@ -1,58 +1,64 @@
-# RL-TNCO (fork)
+# RL-TNCO (Fork)
 
-This is a fork of the [RL-TNCO](https://github.com/NVlabs/RL-TNCO) project; we recommend reading their `README.md` file in addition to this one. The purpose is to apply the reinforcement learning method for finding contraction orders in tensor networks onto tensor-train scalar products as a submodule of [the OptiTenseurs tensor-train scalar product contraction ordering project](https://github.com/Blixodus/OptiTenseurs). This repository is public mainly for data replication purposes; however, some of this information might be useful to users who wish to understand how to use RL-TNCO in general.
+This repository is a fork of [RL-TNCO](https://github.com/NVlabs/RL-TNCO). We recommend reading their `README.md` file in addition to this one for a comprehensive understanding. This work applies the reinforcement learning approach to solving the tensor network contraction ordering problem, specifically for tensor-train scalar products. It is integrated as a submodule of the [TT-ScalProdOpt](https://github.com/Blixodus/TT-ScalProdOpt) tensor-train scalar product contraction ordering project. This repository is public primarily for data replication purposes. However, it may also serve as a resource for those interested in understanding and utilizing RL-TNCO in general.
 
 ## Conda environment
 
-To use RL-TNCO, we recommend using the provided [conda](https://www.anaconda.com/) environment. The original RL-TNCO repository also contains a `Dockerfile`, which unfortunately does not work and has been removed from this fork. To create the conda environment, use the following commands:
-```
-# Pre-setup environment
+To use RL-TNCO, we recommend setting up the provided [Conda](https://www.anaconda.com/) environment. While the original RL-TNCO repository includes a `Dockerfile`, it seems non functional and has been removed from this fork. To set up the Conda environment, run:
+```bash
+# Create and set up the environment
 conda env create -n rl-tnco --file environment.yml
-# Install additional packages dependent on specific PyTorch and CUDA versions and not available by default (requires activation of the environment)
+# Install additional dependencies which require specific PyTorch and CUDA versions
 conda activate rl-tnco
 pip install pyg-lib==0.1.0+pt113cu117 torch-cluster==1.6.0+pt113cu117 torch-scatter==2.1.0+pt113cu117 torch-sparse==0.6.16+pt113cu117 torch-spline-conv==1.2.1+pt113cu117 -f https://data.pyg.org/whl/torch-1.13.0%2Bcu117.html
 ```
 
-The RL-TNCO project uses an [online tool](https://wandb.ai/); however, we recommend turning it off unless necessary to ensure the code runs well in all cases. For this, you can for example use the following command:
-```
+RL-TNCO integrates with [Weights & Biases](https://wandb.ai/), but we recommend disabling it unless necessary to ensure smooth execution. To disable logging, use:
+```bash
 wandb offline
 ```
 
-## Provided files for tensor-train scalar product
+## Reproducing results from the paper
 
-The `datasets` directory contains the files that were used for model training and evaluation in the [tensor-train scalar product contraction ordering publication (link to come)](). Notably,
-- `train/scalar_product_2D_dataset_num_eqs_900_num_node_100_mean_conn_3.p` can be used to train on $x^Ty$-type scalar products,
-- `train/scalar_product_3D_dataset_num_eqs_450_num_node_100_mean_conn_3.p` can be used to train on $x^TAy$-type scalar products,
-- `eval/synthetic/xy/` directory contains the synthetic $x^Ty$-type tensor trains used to evaluate the model,
-- `eval/synthetic/xAy/` directory contains the synthetic $x^TAy$-type tensor trains used to evaluate the model,
-- `eval/real-tt/xy` directory contains the real-life $x^Ty$-type tensor trains used to evaluate the model,
-- `eval/real-tt/xAy` directory contains the real-life $x^TAy$-type tensor trains used to evaluate the model.
+### Pre-trained models
 
-The `models` directory (submodule) contains pre-trained models for $x^Ty$ and $x^TAy$ types of tensor-train scalar products. To use them, modify the `config.py` file at line 27 to be as follows:
-```
+The `models` directory (submodule) contains pre-trained models for $x^Ty$ and $x^TAy$ types of tensor-train scalar products. To use them, update the `config.py` file at **line 27** as follows:
+```python
 'pretrained_model' : 'models/[type]/epoch_32.model'
 ```
 
-## Reproducing data from the paper
+### Creating training and evaluation datasets
 
-You can run the `benchmarking.py` script after setting a model, as described in the previous section. Run the command below, setting input to one of the directories listed above and output to any directory where you want results to be written. After obtaining results, you can follow instructions from [OptiTenseurs](https://github.com/Blixodus/OptiTenseurs) to create plots.
-```
-python benchmarking.py [input] [output]
-```
+Detailed steps for generating training and evaluation datasets are provided in the parent repository. For the following instructions, we assume that datasets have already been created. Note the differences between dataset formats:
+- **Training datasets**: A single file containing multiple training tensor networks.
+- **Evaluation datasets**: Multiple files, each containing a single tensor network.
 
-**Important note: For some tensor trains, the RL-TNCO method might not return a result or only a partial result. The reason for this is currently unknown to us.**
+### Training the model
 
-## Training the model
-
-If you wish to train a model, run the `main.py` script. Simply modify the config.py file as required:
-```
-# Make these values match reality (note: xy type network has 2 x length nodes and 3 x length edges, xAy type network has 3 x length nodes and 5 x length edges)
+If you wish to train the model instead of using one of the provided pre-trained models, use the `main.py` script. Before running it, update the `config.py` file as required:
+```python
+# Set these values based on the network type
+# x'y-type: 2×length nodes, 3×length edges
+# x'Ay-type: 3×length nodes, 5×length edges
 n_nodes = [number of nodes of the largest network]
 n_edges = [number of edges of the largest network]
-# Point to training files to avoid scripts creating random training files
-train_files = 'datasets/scalar_product_[type].p'
-# No pre-trained model for training
+# Specify training dataset to prevent random file generation
+train_files = '[training_file].p'
+# No pre-trained model should be used for training
 'pretrained_model' : None
 ```
 
-You can use one of the previously mentioned training files or generate your own with tools from [OptiTenseurs](https://github.com/Blixodus/OptiTenseurs).
+After training, a model will be saved at `wandb/run-[run_timestamp_and_id]/files/epoch_32.model`. This model can then be used as pre-trained model for benchmarking.
+
+### Running the benchmark
+
+To run benchmarking, ensure that a pre-trained model is set in `config.py`, then execute the following command. Set `[input]` to a directory containing evaluation datasets (pickle files) and `[output]` to the directory where results should be saved:
+```bash
+python benchmarking.py [input] [output]
+```
+
+### Using results
+
+Once benchmarking is complete, follow the instructions in the parent repository to generate plots.
+
+**Important note: For specific tensor trains, the RL-TNCO method may fail to return a result or only provide a partial result. The cause of this issue remains unknown, however, it is mitigated somewhat by having each benchmarking file contain only a single tensor network**
