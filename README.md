@@ -28,7 +28,7 @@ The `datasets` directory contains the files that were used for model training an
 - `eval/real-tt/xy` directory contains the real-life $x^Ty$-type tensor trains used to evaluate the model,
 - `eval/real-tt/xAy` directory contains the real-life $x^TAy$-type tensor trains used to evaluate the model.
 
-The `models` directory contains pre-trained models for $x^Ty$ and $x^TAy$ types of tensor-train scalar products. To use them, modify the `config.py` file at line 27 to be as follows:
+The `models` directory (submodule) contains pre-trained models for $x^Ty$ and $x^TAy$ types of tensor-train scalar products. To use them, modify the `config.py` file at line 27 to be as follows:
 ```
 'pretrained_model' : 'models/[type]/epoch_32.model'
 ```
